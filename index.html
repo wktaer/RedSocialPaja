@@ -1006,23 +1006,26 @@
             });
         }
 
-        function showSection(sectionId) {
-            // Ocultar todas las secciones
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Remover clase active de todos los botones
-            document.querySelectorAll('.btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Mostrar sección seleccionada
-            document.getElementById(sectionId).classList.add('active');
-            
-            // Activar botón correspondiente
-            event.target.classList.add('active');
-            
+        function showSection(sectionId, button = null) {
+        // Ocultar todas las secciones
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Remover clase active de todos los botones
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Mostrar sección seleccionada
+        document.getElementById(sectionId).classList.add('active');
+
+        // Activar botón correspondiente si existe
+        if (button) {
+            button.classList.add('active');
+        }
+
+
             // Cargar datos específicos de la sección
             if (sectionId === 'saved-lists') {
                 loadSavedLists();
@@ -1381,7 +1384,7 @@
         }
 
         async function finishShopping() {
-            if (!confirm('¿Finalizar compra? Esto marcará la lista como completada.')) {
+            if (!confirm('¿Finalizar compra? Esto marcará la lista como completada. LUEGO NO QUIERO EN LA CASA DICIENDO QUE LES FALTO ALGO!')) {
                 return;
             }
             

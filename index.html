@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialNet - Red Social de Amigos</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+        }
+
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-online {
+            background: #28a745;
+            box-shadow: 0 0 6px rgba(40, 167, 69, 0.6);
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .auth-container, .main-app {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: auto;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .post-composer {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .post-composer:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .post-textarea {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            color: #333;
+            placeholder-color: #aaa;
+        }
+
+        .post-options {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .post-option {
+            padding: 10px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .post-option:hover, .post-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .poll-options {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .poll-options.active {
+            display: block;
+        }
+
+        .poll-option-input {
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .char-counter {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .char-counter.warning {
+            color: #ff6b6b;
+        }
+
+        .post-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: auto;
+        }
+
+        .post-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .post-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .post {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .post:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 15px;
+        }
+
+        .post-meta {
+            flex: 1;
+        }
+
+        .post-author {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .post-time {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .post-content {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .post-poll {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+
+        .poll-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            border: 2px solid #e9ecef;
+        }
+
+        .poll-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .poll-option.voted {
+            border-color: #667eea;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) var(--percentage), transparent var(--percentage));
+        }
+
+        .poll-percentage {
+            margin-left: auto;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .post-actions-bottom {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .action-btn.liked {
+            color: #ff6b6b;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: #d63384;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c2c7;
+        }
+
+        .success-message {
+            background: #d1e7dd;
+            color: #0a3622;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #a3cfbb;
+        }
+
+        .setup-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .setup-notice h3 {
+            margin-bottom: 10px;
+        }
+
+        .setup-notice code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .app-title {
+                font-size: 2rem;
+            }
+
+            .post-options {
+                flex-direction: column;
+            }
+
+            .post-option {
+                text-align: center;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .online-users {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">
+                SocialNet
+                <span id="connection-status" class="status-indicator status-offline"></span>
+            </h1>
+            <p>Tu red social privada con amigos</p>
+            <div id="online-status" class="online-users hidden">
+                <span id="online-count">0</span> usuarios conectados
+            </div>
+        </div>
+
+        <!-- Aviso de configuración -->
+        <div id="setup-notice" class="setup-notice">
+            <h3>⚠️ Configuración Requerida</h3>
+            <p>Para usar esta aplicación, necesitas configurar Supabase:</p>
+            <ol>
+                <li>Crea una cuenta en <a href="https://supabase.com" target="_blank">supabase.com</a></li>
+                <li>Crea un nuevo proyecto</li>
+                <li>Ve a Settings → API</li>
+                <li>Reemplaza <code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code> en el código</li>
+            </ol>
+        </div>
+
+        <!-- Autenticación -->
+        <div id="auth-container" class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Iniciar Sesión</div>
+                <div class="auth-tab" data-tab="register">Registrarse</div>
+            </div>
+
+            <div id="error-message" class="error-message hidden"></div>
+            <div id="success-message" class="success-message hidden"></div>
+
+            <!-- Login -->
+            <div id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button class="btn" onclick="login()">Iniciar Sesión</button>
+            </div>
+
+            <!-- Register -->
+            <div id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="register-name">Nombre Completo</label>
+                    <input type="text" id="register-name" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Correo Electrónico</label>
+                    <input type="email" id="register-email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Contraseña</label>
+                    <input type="password" id="register-password" placeholder="••••••••" required>
+                </div>
+                <button class="btn" onclick="register()">Crear Cuenta</button>
+            </div>
+        </div>
+
+        <!-- Aplicación Principal -->
+        <div id="main-app" class="main-app hidden">
+            <!-- Info del usuario -->
+            <div class="user-info">
+                <div>
+                    <strong id="user-name">Usuario</strong>
+                    <br>
+                    <small id="user-email">email@ejemplo.com</small>
+                </div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+            <!-- Compositor de posts -->
+            <div class="post-composer">
+                <textarea id="post-content" class="post-textarea" placeholder="¿Qué está pasando?" rows="3"></textarea>
+                
+                <div class="post-options">
+                    <div class="post-option active" data-type="text">📝 Texto</div>
+                    <div class="post-option" data-type="poll">📊 Encuesta</div>
+                    <div class="post-option" data-type="mood">😊 Estado de ánimo</div>
+                </div>
+
+                <div id="poll-options" class="poll-options">
+                    <input type="text" class="poll-option-input" placeholder="Opción 1" maxlength="50">
+                    <input type="text" class="poll-option-input" placeholder="Opción 2" maxlength="50">
+                    <button onclick="addPollOption()" style="padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">+ Agregar opción</button>
+                </div>
+
+                <div class="post-actions">
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/280
+                    </div>
+                    <button id="post-btn" class="post-btn" onclick="createPost()">Publicar</button>
+                </div>
+            </div>
+
+            <!-- Feed de posts -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Cargando publicaciones...</p>
+            </div>
+            
+            <div id="feed" class="feed hidden">
+                <!-- Los posts se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ CONFIGURACIÓN REQUERIDA ⚠️
+        // Reemplaza estos valores con los de tu proyecto Supabase
+        const SUPABASE_URL = 'https://mnkchjirnwthlmivtsrl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ua2Noamlybnd0aGxtaXZ0c3JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MjM2MzUsImV4cCI6MjA2Njk5OTYzNX0.Kf2Ogfx39u45G5FQhsWla8aerGdoqhYPWqWbLQQpjMU';
+        
+        let supabase;
+        let currentUser = null;
+        let currentPostType = 'text';
+        let postsSubscription = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            if (SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI' && SUPABASE_ANON_KEY !== 'TU_SUPABASE_ANON_KEY_AQUI') {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const setupNotice = document.getElementById('setup-notice');
+                if (setupNotice) {
+                    setupNotice.classList.add('hidden');
+                }
+                document.getElementById('connection-status').classList.remove('status-offline');
+                document.getElementById('connection-status').classList.add('status-online');
+                document.getElementById('online-status').classList.remove('hidden');
+                checkAuth();
+                setupRealtimeSubscription();
+            } else {
+                showAuthContainer();
+            }
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Tabs de autenticación
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabType = this.dataset.tab;
+                    switchAuthTab(tabType);
+                });
+            });
+
+            // Opciones de post
+            document.querySelectorAll('.post-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    selectPostType(type);
+                });
+            });
+
+            // Contador de caracteres
+            const postContent = document.getElementById('post-content');
+            if (postContent) {
+                postContent.addEventListener('input', updateCharCounter);
+            }
+
+            // Enter para enviar en campos de login
+            const loginPassword = document.getElementById('login-password');
+            if (loginPassword) {
+                loginPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') login();
+                });
+            }
+
+            const registerPassword = document.getElementById('register-password');
+            if (registerPassword) {
+                registerPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') register();
+                });
+            }
+        }
+
+        async function setupRealtimeSubscription() {
+            if (!supabase) return;
+
+            // Suscribirse a cambios en tiempo real
+            postsSubscription = supabase
+                .channel('posts_channel')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'posts'
+                }, (payload) => {
+                    console.log('Cambio detectado:', payload);
+                    loadPosts(); // Recargar posts cuando hay cambios
+                })
+                .subscribe();
+        }
+
+        function switchAuthTab(tabType) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabType}"]`).classList.add('active');
+
+            if (tabType === 'login') {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+            } else {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+            }
+        }
+
+        function selectPostType(type) {
+            currentPostType = type;
+            document.querySelectorAll('.post-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+
+            if (type === 'poll') {
+                document.getElementById('poll-options').classList.add('active');
+            } else {
+                document.getElementById('poll-options').classList.remove('active');
+            }
+        }
+
+        function updateCharCounter() {
+            const content = document.getElementById('post-content').value;
+            const counter = document.getElementById('char-count');
+            const charCount = content.length;
+            
+            counter.textContent = charCount;
+            
+            if (charCount > 250) {
+                counter.parentElement.classList.add('warning');
+            } else {
+                counter.parentElement.classList.remove('warning');
+            }
+
+            document.getElementById('post-btn').disabled = charCount > 280 || charCount === 0;
+        }
+
+        async function checkAuth() {
+            if (!supabase) return;
+            
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                currentUser = user;
+                showMainApp();
+            } else {
+                showAuthContainer();
+            }
+        }
+
+        async function login() {
+            if (!supabase) {
+                showError('Supabase no está configurado');
+                return;
+            }
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showError('Por favor, completa todos los campos');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                showError(error.message);
+            } else {
+                currentUser = data.user;
+                showMainApp();
+            }
+        }
+
+        async function register() {
+            if (!supabase) {
+                showError('Supabase no está configurado');
+                return;
+            }
+
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            if (!name || !email || !password) {
+                showError('Por favor, completa todos los campos');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: name
+                    }
+                }
+            });
+
+            if (error) {
+                showError(error.message);
+            } else {
+                showSuccess('¡Cuenta creada exitosamente! Revisa tu correo para confirmar tu cuenta.');
+                switchAuthTab('login');
+            }
+        }
+
+        async function logout() {
+            if (supabase) {
+                await supabase.auth.signOut();
+            }
+            
+            if (postsSubscription) {
+                supabase.removeChannel(postsSubscription);
+            }
+            
+            currentUser = null;
+            showAuthContainer();
+        }
+
+        function showAuthContainer() {
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // Actualizar info del usuario
+            document.getElementById('user-name').textContent = 
+                currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            document.getElementById('user-email').textContent = currentUser.email;
+            
+            loadPosts();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+            }
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.classList.remove('hidden');
+                setTimeout(() => successDiv.classList.add('hidden'), 5000);
+            }
+        }
+
+        async function createPost() {
+            if (!supabase || !currentUser) return;
+
+            const content = document.getElementById('post-content').value.trim();
+            if (!content || content.length > 280) return;
+
+            let postData = {
+                content: content,
+                author_id: currentUser.id,
+                author_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                post_type: currentPostType,
+                created_at: new Date().toISOString()
+            };
+
+            if (currentPostType === 'poll') {
+                const pollOptions = [];
+                document.querySelectorAll('.poll-option-input').forEach(input => {
+                    if (input.value.trim()) {
+                        pollOptions.push({
+                            text: input.value.trim(),
+                            votes: 0
+                        });
+                    }
+                });
+
+                if (pollOptions.length < 2) {
+                showError('Una encuesta necesita al menos 2 opciones');
+                    return;
+                }
+
+                postData.poll_options = pollOptions;
+            }
+
+            const { data, error } = await supabase
+                .from('posts')
+                .insert([postData]);
+
+            if (error) {
+                showError('Error al crear el post: ' + error.message);
+            } else {
+                // Limpiar formulario
+                document.getElementById('post-content').value = '';
+                document.querySelectorAll('.poll-option-input').forEach(input => input.value = '');
+                updateCharCounter();
+                selectPostType('text');
+            }
+        }
+
+        async function loadPosts() {
+            if (!supabase) return;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('feed').classList.add('hidden');
+
+            const { data: posts, error } = await supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (error) {
+                showError('Error al cargar posts: ' + error.message);
+                return;
+            }
+
+            displayPosts(posts || []);
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('feed').classList.remove('hidden');
+        }
+
+        function displayPosts(posts) {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+
+            if (posts.length === 0) {
+                feed.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No hay publicaciones aún. ¡Sé el primero en publicar!</div>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const postElement = createPostElement(post);
+                feed.appendChild(postElement);
+            });
+        }
+
+        function createPostElement(post) {
+            const postDiv = document.createElement('div');
+            postDiv.className = 'post';
+            postDiv.dataset.postId = post.id;
+
+            const timeAgo = getTimeAgo(new Date(post.created_at));
+            const userInitial = post.author_name ? post.author_name.charAt(0).toUpperCase() : 'U';
+
+            let postContent = `
+                <div class="post-header">
+                    <div class="user-avatar">${userInitial}</div>
+                    <div class="post-meta">
+                        <div class="post-author">${post.author_name}</div>
+                        <div class="post-time">${timeAgo}</div>
+                    </div>
+                </div>
+                <div class="post-content">${escapeHtml(post.content)}</div>
+            `;
+
+            if (post.post_type === 'poll' && post.poll_options) {
+                postContent += createPollHTML(post);
+            }
+
+            postContent += `
+                <div class="post-actions-bottom">
+                    <button class="action-btn" onclick="toggleLike(${post.id})">
+                        <span>❤️</span>
+                        <span id="likes-${post.id}">${post.likes || 0}</span>
+                    </button>
+                    <button class="action-btn">
+                        <span>💬</span>
+                        <span>${post.comments || 0}</span>
+                    </button>
+                    <button class="action-btn">
+                        <span>🔄</span>
+                        <span>${post.shares || 0}</span>
+                    </button>
+                </div>
+            `;
+
+            postDiv.innerHTML = postContent;
+            return postDiv;
+        }
+
+        function createPollHTML(post) {
+            const totalVotes = post.poll_options.reduce((sum, option) => sum + option.votes, 0);
+            
+            let pollHTML = '<div class="post-poll">';
+            
+            post.poll_options.forEach((option, index) => {
+                const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
+                
+                pollHTML += `
+                    <div class="poll-option" onclick="voteInPoll(${post.id}, ${index})" style="--percentage: ${percentage}%">
+                        <span>${escapeHtml(option.text)}</span>
+                        <span class="poll-percentage">${percentage}%</span>
+                    </div>
+                `;
+            });
+            
+            pollHTML += `<div style="text-align: center; margin-top: 10px; color: #666; font-size: 14px;">${totalVotes} votos</div>`;
+            pollHTML += '</div>';
+            
+            return pollHTML;
+        }
+
+        async function voteInPoll(postId, optionIndex) {
+            if (!supabase || !currentUser) return;
+
+            // Verificar si ya votó
+            const { data: existingVote } = await supabase
+                .from('poll_votes')
+                .select('*')
+                .eq('post_id', postId)
+                .eq('user_id', currentUser.id)
+                .single();
+
+            if (existingVote) {
+                showError('Ya has votado en esta encuesta');
+                return;
+            }
+
+            // Registrar voto
+            const { error: voteError } = await supabase
+                .from('poll_votes')
+                .insert([{
+                    post_id: postId,
+                    user_id: currentUser.id,
+                    option_index: optionIndex
+                }]);
+
+            if (voteError) {
+                showError('Error al votar: ' + voteError.message);
+                return;
+            }
+
+            // Actualizar contador de votos en el post
+            const { data: post } = await supabase
+                .from('posts')
+                .select('poll_options')
+                .eq('id', postId)
+                .single();
+
+            if (post && post.poll_options) {
+                const updatedOptions = [...post.poll_options];
+                updatedOptions[optionIndex].votes += 1;
+
+                await supabase
+                    .from('posts')
+                    .update({ poll_options: updatedOptions })
+                    .eq('id', postId);
+            }
+        }
+
+        async function toggleLike(postId) {
+            if (!supabase || !currentUser) return;
+
+            // Verificar si ya le dio like
+            const { data: existingLike } = await supabase
+                .from('post_likes')
+                .select('*')
+                .eq('post_id', postId)
+                .eq('user_id', currentUser.id)
+                .single();
+
+            if (existingLike) {
+                // Quitar like
+                await supabase
+                    .from('post_likes')
+                    .delete()
+                    .eq('id', existingLike.id);
+
+                // Decrementar contador
+                await supabase.rpc('decrement_likes', { post_id: postId });
+            } else {
+                // Agregar like
+                await supabase
+                    .from('post_likes')
+                    .insert([{
+                        post_id: postId,
+                        user_id: currentUser.id
+                    }]);
+
+                // Incrementar contador
+                await supabase.rpc('increment_likes', { post_id: postId });
+            }
+        }
+
+        function addPollOption() {
+            const pollOptions = document.getElementById('poll-options');
+            const existingInputs = pollOptions.querySelectorAll('.poll-option-input');
+            
+            if (existingInputs.length >= 6) {
+                showError('Máximo 6 opciones permitidas');
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'poll-option-input';
+            input.placeholder = `Opción ${existingInputs.length + 1}`;
+            input.maxLength = 50;
+
+            pollOptions.insertBefore(input, pollOptions.lastElementChild);
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) return 'Hace un momento';
+            if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+            if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} h`;
+            if (diffInSeconds < 2592000) return `Hace ${Math.floor(diffInSeconds / 86400)} d`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Actualizar contador de usuarios online (simulado)
+        setInterval(() => {
+            const onlineCount = Math.floor(Math.random() * 10) + 1;
+            const onlineCountElement = document.getElementById('online-count');
+            if (onlineCountElement) {
+                onlineCountElement.textContent = onlineCount;
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
